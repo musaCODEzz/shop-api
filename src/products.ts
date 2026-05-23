@@ -51,11 +51,146 @@ let products: Product[] = [
         createdAt: new Date("2023-04-05")
     }
 ];
+let nextProductId = products.length + 1;
 
-
+// findd all products that are available
 export function getAllProducts(): Product[] {
     return products;
 }
+// find product by id
+export function getProductById(id: number): Product | undefined {
+    return products.find(p => p.id === id);
+}
+
+//create a new product
+export function createProduct(data: CreateProductInput): { success: boolean; data?: Product; error?: string } {
+    const validation = validateCreateProduct(data);
+    if(!validation.valid){
+        return { success: false, error: validation.error };
+    }
+    const newProduct: Product = {
+        id: nextProductId++,
+        name: data.name.trim(),
+        price: data.price,
+        stock: data.stock,
+        category: data.category,
+        description: data.description.trim(),
+        available: data.stock > 0,
+        createdAt: new Date()
+    };
+    products.push(newProduct);
+    return { success: true, data: newProduct };
+}
+
+// ============ UPDATE PRODUCT ============
+
+// Update an existing product
+export function updateProduct(
+    id: number,
+    updates: Partial<CreateProductInput>
+): { success: boolean; data?: Product; error?: string } {
+    // Step 1: Find the product
+    const product = getProductById(id);
+    
+    // If product doesn't exist, return error
+    if (!product) {
+        return { success: false, error: `Product with ID ${id} not found` };
+    }
+
+    // Step 2: Check if at least one field is provided
+    if (!updates.name && updates.price === undefined && !updates.stock && !updates.category && !updates.description) {
+        return { success: false, error: "Please provide at least one field to update" };
+    }
+
+    // Step 3: Validate each field that was provided
+    if (updates.name !== undefined) {
+        const nameValidation = validateName(updates.name);
+        if (!nameValidation.valid) {
+            return { success: false, error: nameValidation.error };
+        }
+    }
+
+    if (updates.price !== undefined) {
+        const priceValidation = validatePrice(updates.price);
+        if (!priceValidation.valid) {
+            return { success: false, error: priceValidation.error };
+        }
+    }
+
+    if (updates.stock !== undefined) {
+        const stockValidation = validateStock(updates.stock);
+        if (!stockValidation.valid) {
+            return { success: false, error: stockValidation.error };
+        }
+    }
+
+    if (updates.category !== undefined) {
+        const categoryValidation = validateCategory(updates.category);
+        if (!categoryValidation.valid) {
+            return { success: false, error: categoryValidation.error };
+        }
+    }
+
+    if (updates.description !== undefined) {
+        const descriptionValidation = validateDescription(updates.description);
+        if (!descriptionValidation.valid) {
+            return { success: false, error: descriptionValidation.error };
+        }
+    }
+
+    // Step 4: Apply updates to the product
+    if (updates.name !== undefined) {
+        product.name = updates.name.trim();
+    }
+
+    if (updates.price !== undefined) {
+        product.price = updates.price;
+    }
+
+    if (updates.stock !== undefined) {
+        product.stock = updates.stock;
+    }
+
+    if (updates.category !== undefined) {
+        product.category = updates.category;
+    }
+
+    if (updates.description !== undefined) {
+        product.description = updates.description.trim();
+    }
+
+    // Step 5: Update 'available' based on stock
+    product.available = product.stock > 0;
+
+    // Step 6: Return success with updated product
+    return { success: true, data: product };
+}
+// ============ DELETE PRODUCT ============
+
+// Delete a product
+export function deleteProduct(id: number): { success: boolean; data?: Product; error?: string } {
+    // Step 1: Find the product's position in the array
+    const index = products.findIndex(p => p.id === id);
+    
+    // If not found, return error
+    if (index === -1) {
+        return { success: false, error: `Product with ID ${id} not found` };
+    }
+
+    // Step 2: Remove the product from array
+    // splice() removes items from array and returns them
+    // splice(index, 1) means: starting at index, remove 1 item
+    // [0] means: get the first (and only) item removed
+    const deletedProduct = products.splice(index, 1)[0];
+
+    // Step 3: Return success with the deleted product
+    return { success: true, data: deletedProduct };
+}
+
+
+
+
+
 
 export function validatePrice(price:number):{ valid: boolean; error?: string } {
     if(price === undefined || price === null){
@@ -138,10 +273,10 @@ export interface CreateProductInput {
 
 export function validateCreateProduct(
     data: any
-):{ valid: boolean; errors?: string } {
-    // check if it exista
+):{ valid: boolean; error?: string } {
+    // check if it exists
     if(!data.name){
-        return { valid: false, errors: "Name is required." };
+        return { valid: false, error: "Name is required." };
     }
     // validate each field
     const nameValidation = validateName(data.name);
@@ -149,28 +284,28 @@ export function validateCreateProduct(
         return nameValidation;
     }
     if(!data.price === undefined ){
-        return { valid: false, errors: "Price is required." };
+        return { valid: false, error: "Price is required." };
     }
     const priceValidation = validatePrice(data.price);
     if(!priceValidation.valid){
         return priceValidation;
     }
     if(!data.stock === undefined){
-        return { valid: false, errors: "Stock is required." };
+        return { valid: false, error: "Stock is required." };
     }
     const stockValidation = validateStock(data.stock);
     if(!stockValidation.valid){
         return stockValidation;
     }
     if(!data.category === undefined){
-        return { valid: false, errors: "Category is required." };
+        return { valid: false, error: "Category is required." };
     }
     const categoryValidation = validateCategory(data.category);
     if(!categoryValidation.valid){
         return categoryValidation;
     }
     if(!data.description === undefined){
-        return { valid: false, errors: "Description is required." };
+        return { valid: false, error: "Description is required." };
     }
     const descriptionValidation = validateDescription(data.description);
     if(!descriptionValidation.valid){
