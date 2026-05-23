@@ -99,7 +99,7 @@ You should see 4 sample products in JSON format.
 - Tested all validators with test-validators.ts
 - Learned guard clauses and error handling
 
-### Step 4: CRUD Operations (NEXT)
+### Step 4: CRUD Operations (DONE)
 
 - Get single product by ID
 - Create new products
@@ -126,10 +126,10 @@ You should see 4 sample products in JSON format.
 | ------ | ------------- | --------------------- | ------ |
 | GET    | /             | Welcome message       | DONE   |
 | GET    | /products     | Get all products      | DONE   |
-| GET    | /products/:id | Get one product by ID | Step 4 |
-| POST   | /products     | Create new product    | Step 4 |
-| PUT    | /products/:id | Update product        | Step 4 |
-| DELETE | /products/:id | Delete product        | Step 4 |
+| GET    | /products/:id | Get one product by ID | DONE   |
+| POST   | /products     | Create new product    | DONE   |
+| PUT    | /products/:id | Update product        | DONE   |
+| DELETE | /products/:id | Delete product        | DONE   |
 
 ## Sample API Response
 
