@@ -98,7 +98,11 @@ export function updateProduct(
     }
 
     // Step 2: Check if at least one field is provided
-    if (!updates.name && updates.price === undefined && !updates.stock && !updates.category && !updates.description) {
+    if (updates.name === undefined && 
+        updates.price === undefined && 
+        updates.stock === undefined && 
+        updates.category === undefined && 
+        updates.description === undefined) {
         return { success: false, error: "Please provide at least one field to update" };
     }
 
@@ -283,28 +287,28 @@ export function validateCreateProduct(
     if(!nameValidation.valid){
         return nameValidation;
     }
-    if(!data.price === undefined ){
+    if(data.price === undefined ){
         return { valid: false, error: "Price is required." };
     }
     const priceValidation = validatePrice(data.price);
     if(!priceValidation.valid){
         return priceValidation;
     }
-    if(!data.stock === undefined){
+    if(data.stock === undefined){
         return { valid: false, error: "Stock is required." };
     }
     const stockValidation = validateStock(data.stock);
     if(!stockValidation.valid){
         return stockValidation;
     }
-    if(!data.category === undefined){
+    if(data.category === undefined){
         return { valid: false, error: "Category is required." };
     }
     const categoryValidation = validateCategory(data.category);
     if(!categoryValidation.valid){
         return categoryValidation;
     }
-    if(!data.description === undefined){
+    if(data.description === undefined){
         return { valid: false, error: "Description is required." };
     }
     const descriptionValidation = validateDescription(data.description);
@@ -312,4 +316,22 @@ export function validateCreateProduct(
         return descriptionValidation;
     }
     return { valid: true };
+}
+
+// ============ RESET FOR TESTING ============
+
+export function resetProducts(): void {
+    // Clear the current products array
+    products.length = 0;
+    
+    // Add back original 4 products
+    products.push(
+        { id: 1, name: "Laptop", price: 999.99, stock: 10, category: "Electronics", description: "A high-performance laptop for work and play.", available: true, createdAt: new Date("2023-01-01") },
+        { id: 2, name: "Smartphone", price: 449.99, stock: 20, category: "Electronics", description: "A sleek smartphone with the latest features.", available: true, createdAt: new Date("2023-02-15") },
+        { id: 3, name: "Headphones", price: 199.99, stock: 15, category: "Accessories", description: "Noise-cancelling headphones for immersive sound.", available: true, createdAt: new Date("2023-03-10") },
+        { id: 4, name: "Coffee Maker", price: 79.99, stock: 0, category: "Electronics", description: "Brew the perfect cup of coffee every morning.", available: false, createdAt: new Date("2023-04-05") }
+    );
+    
+    // Reset ID counter
+    nextProductId = 5;
 }
