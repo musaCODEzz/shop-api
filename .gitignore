@@ -1,3 +1,7 @@
 node_modules/
 dist/
 .env
+src/proo
+*.db
+*.sqlite
+*.sqlite3
