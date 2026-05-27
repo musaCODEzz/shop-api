@@ -15,12 +15,16 @@
   "type": "commonjs",
   "dependencies": {
     "better-sqlite3": "^12.10.0",
-    "express": "^5.2.1"
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "mongodb": "^7.2.0",
+    "mongoose": "^9.6.2"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
     "@types/express": "^5.0.6",
     "@types/jest": "^30.0.0",
+    "@types/mongoose": "^5.11.96",
     "@types/node": "^25.9.1",
     "jest": "^30.4.2",
     "ts-jest": "^29.4.11",

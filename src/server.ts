@@ -1,114 +1,54 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
+import { connectToDatabase, disconnectFromDatabase } from './MongoDb';
 import {
     getAllProducts,
     getProductById,
     createProduct,
     updateProduct,
     deleteProduct,
-    type CreateProductInput
-} from './products';
+    seedInitialData
+} from './mongoProducts';
 
 const app = express();
 const PORT = 3000;
 
-// Middleware
+// ============ MIDDLEWARE ============
+
 app.use(express.json());
 
-// ============ GET ROUTES ============
+// ============ STARTUP & DATABASE CONNECTION ============
 
-// GET all products
-app.get('/products', (req, res) => {
-    const products = getAllProducts();
-    res.status(200).json(products);
+app.listen(PORT, async () => {
+    console.log(`\n${'='.repeat(60)}`);
+    console.log(`✅ Server running on http://localhost:${PORT}`);
+    console.log(`${'='.repeat(60)}\n`);
+    
+    try {
+        await connectToDatabase();
+        await seedInitialData();
+        console.log('\n🚀 API Ready to accept requests!\n');
+    } catch (error) {
+        console.error('❌ Failed to start server:', error);
+        process.exit(1);
+    }
 });
 
-// GET one product by ID
-app.get('/products/:id', (req, res) => {
-    // Get ID from URL and convert to number
-    const id = parseInt(req.params.id);
-    
-    // Call function to find product
-    const product = getProductById(id);
-    
-    // If not found, return 404
-    if (!product) {
-        return res.status(404).json({ error: `Product with ID ${id} not found` });
-    }
-    
-    // If found, return product
-    res.status(200).json(product);
-});
+// ============ GRACEFUL SHUTDOWN ============
 
-// ============ POST ROUTE (CREATE) ============
-
-// POST create new product
-app.post('/products', (req, res) => {
-    // Get data from request body
-    const data: CreateProductInput = req.body;
-    
-    // Call function to create
-    const result = createProduct(data);
-    
-    // If failed, return 400
-    if (!result.success) {
-        return res.status(400).json({ error: result.error });
-    }
-    
-    // If success, return 201 (created) with product
-    res.status(201).json(result.data);
-});
-
-// ============ PUT ROUTE (UPDATE) ============
-
-// PUT update product
-app.put('/products/:id', (req, res) => {
-    // Get ID from URL and convert to number
-    const id = parseInt(req.params.id);
-    
-    // Get updates from request body
-    const updates = req.body;
-    
-    // Call function to update
-    const result = updateProduct(id, updates);
-    
-    // If failed, return 400
-    if (!result.success) {
-        return res.status(400).json({ error: result.error });
-    }
-    
-    // If success, return updated product
-    res.status(200).json(result.data);
-});
-
-// ============ DELETE ROUTE ============
-
-// DELETE product
-app.delete('/products/:id', (req, res) => {
-    // Get ID from URL and convert to number
-    const id = parseInt(req.params.id);
-    
-    // Call function to delete
-    const result = deleteProduct(id);
-    
-    // If failed, return 404
-    if (!result.success) {
-        return res.status(404).json({ error: result.error });
-    }
-    
-    // If success, return deleted product
-    res.status(200).json({
-        message: "Product deleted successfully",
-        data: result.data
-    });
+process.on('SIGINT', async () => {
+    console.log('\n\n📊 Shutting down gracefully...');
+    await disconnectFromDatabase();
+    process.exit(0);
 });
 
 // ============ WELCOME ROUTE ============
 
-// GET welcome message
-app.get('/', (req, res) => {
+app.get('/', (req: Request, res: Response) => {
     res.status(200).json({ 
-        message: "Welcome to Shop API! 🏪",
+        message: "Welcome to Shop API with MongoDB Atlas & Mongoose! 🏪☁️",
+        database: "MongoDB Atlas (Cloud) with Mongoose ORM",
         endpoints: [
+            "GET / - Welcome message",
             "GET /products - Get all products",
             "GET /products/:id - Get one product",
             "POST /products - Create product",
@@ -118,14 +58,99 @@ app.get('/', (req, res) => {
     });
 });
 
-// ============ START SERVER ============
+// ============ GET ROUTES ============
 
-app.listen(PORT, () => {
-    console.log(`✅ Server running on http://localhost:${PORT}`);
-    console.log(`📚 API Documentation:`);
-    console.log(`   GET    http://localhost:${PORT}/products`);
-    console.log(`   GET    http://localhost:${PORT}/products/:id`);
-    console.log(`   POST   http://localhost:${PORT}/products`);
-    console.log(`   PUT    http://localhost:${PORT}/products/:id`);
-    console.log(`   DELETE http://localhost:${PORT}/products/:id`);
+app.get('/products', async (req: Request, res: Response) => {
+    try {
+        const products = await getAllProducts();
+        res.status(200).json(products);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch products' });
+    }
+});
+
+app.get('/products/:id', async (req: Request, res: Response) => {
+    try {
+        // 🛡️ Added base 10 and NaN check
+        const id = parseInt(String(req.params.id), 10);
+        if (isNaN(id)) {
+            return res.status(400).json({ error: "Invalid ID format. ID must be a number." });
+        }
+
+        const product = await getProductById(id);
+        
+        if (!product) {
+            return res.status(404).json({ error: `Product with ID ${id} not found` });
+        }
+        
+        res.status(200).json(product);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch product' });
+    }
+});
+
+// ============ POST ROUTE (CREATE) ============
+
+app.post('/products', async (req: Request, res: Response) => {
+    try {
+        // 🛡️ Removed the TypeScript lie! Let req.body be completely untyped.
+        const data = req.body; 
+        const result = await createProduct(data);
+        
+        if (!result.success) {
+            return res.status(400).json({ error: result.error });
+        }
+        
+        res.status(201).json(result.data);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to create product' });
+    }
+});
+
+// ============ PUT ROUTE (UPDATE) ============
+
+app.put('/products/:id', async (req: Request, res: Response) => {
+    try {
+        // 🛡️ Added base 10 and NaN check
+        const id = parseInt(String(req.params.id), 10);
+        if (isNaN(id)) {
+            return res.status(400).json({ error: "Invalid ID format. ID must be a number." });
+        }
+
+        const updates = req.body;
+        const result = await updateProduct(id, updates);
+        
+        if (!result.success) {
+            return res.status(400).json({ error: result.error });
+        }
+        
+        res.status(200).json(result.data);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to update product' });
+    }
+});
+
+// ============ DELETE ROUTE ============
+
+app.delete('/products/:id', async (req: Request, res: Response) => {
+    try {
+        // 🛡️ Added base 10 and NaN check
+        const id = parseInt(String(req.params.id), 10);
+        if (isNaN(id)) {
+            return res.status(400).json({ error: "Invalid ID format. ID must be a number." });
+        }
+
+        const result = await deleteProduct(id);
+        
+        if (!result.success) {
+            return res.status(404).json({ error: result.error });
+        }
+        
+        res.status(200).json({
+            message: "Product deleted successfully",
+            data: result.data
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to delete product' });
+    }
 });
