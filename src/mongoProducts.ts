@@ -283,3 +283,16 @@ export async function seedInitialData(): Promise<void> {
         throw error;
     }
 }
+// ============ ADVANCED QUERY FUNCTIONS ============
+export async function searchProductsByName(searchTerm: string): Promise<IProduct[]> {
+    try{
+        if(!searchTerm || searchTerm.trim() === ''){
+            return [];
+        }
+        const products = await Product.find({name: { $regex: searchTerm, $options: 'i' }}).exec();
+        return products;
+    }catch(error){
+        console.error('❌ Error searching products:', error);
+        throw error;
+    }
+}

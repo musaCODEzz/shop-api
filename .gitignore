@@ -6,3 +6,4 @@ src/proo
 *.db
 *.sqlite
 *.sqlite3
+/async.ts

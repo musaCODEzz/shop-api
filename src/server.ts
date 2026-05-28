@@ -6,7 +6,8 @@ import {
     createProduct,
     updateProduct,
     deleteProduct,
-    seedInitialData
+    seedInitialData,
+    searchProductsByName
 } from './mongoProducts';
 
 const app = express();
@@ -152,5 +153,21 @@ app.delete('/products/:id', async (req: Request, res: Response) => {
         });
     } catch (error) {
         res.status(500).json({ error: 'Failed to delete product' });
+    }
+});
+
+// ============ SEARCH ROUTE (BONUS) ============
+app.get('/products/search/:name', async (req: Request, res: Response) => {
+    try {
+        const searchTerm = String(req.params.name);  // Get from URL
+        const products = await searchProductsByName(searchTerm);
+        
+        res.status(200).json({
+            count: products.length,
+            search: searchTerm,
+            results: products
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to search products' });
     }
 });
