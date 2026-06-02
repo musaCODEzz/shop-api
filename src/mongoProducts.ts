@@ -296,3 +296,17 @@ export async function searchProductsByName(searchTerm: string): Promise<IProduct
         throw error;
     }
 }
+export async function filterProductsByCategory(category: string): Promise<IProduct[]> {
+    try{
+        const validCategories = ['Electronics', 'Accessories', 'Clothing', 'Books'];
+        if(!validCategories.includes(category)){
+            throw new Error(`Invalid category. Must be one of: ${validCategories.join(', ')}`);
+        }
+
+        const products = await Product.find({ category }).exec();
+        return products;
+    }catch(error){
+        console.error('❌ Error filtering products:', error);
+        throw error;
+    }
+}

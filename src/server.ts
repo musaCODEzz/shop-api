@@ -7,7 +7,8 @@ import {
     updateProduct,
     deleteProduct,
     seedInitialData,
-    searchProductsByName
+    searchProductsByName,
+    filterProductsByCategory
 } from './mongoProducts';
 
 const app = express();
@@ -169,5 +170,20 @@ app.get('/products/search/:name', async (req: Request, res: Response) => {
         });
     } catch (error) {
         res.status(500).json({ error: 'Failed to search products' });
+    }
+});
+
+app.get('/products/category/:category', async (req: Request, res: Response) => {
+    try {
+        const category = String(req.params.category);  // Get from URL
+        const products = await filterProductsByCategory(category);
+        
+        res.status(200).json({
+            count: products.length,
+            category: category,
+            results: products
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to filter products by category' });
     }
 });
