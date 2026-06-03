@@ -10,7 +10,8 @@ import {
     searchProductsByName,
     filterProductsByCategory,
     sortProductsByPrice,
-    getPaginatedProducts
+    getPaginatedProducts,
+    searchProductsAdvanced
 } from './mongoProducts';
 
 const app = express();
@@ -222,5 +223,22 @@ app.get('/products/page/:page', async (req: Request, res: Response) => {
         res.status(200).json(result);
     } catch (error) {
         res.status(500).json({ error: 'Failed to paginate products' });
+    }
+});
+
+app.get('/products/advanced/search', async (req: Request, res: Response) => {
+     try {
+        // Get all query parameters from URL
+        const result = await searchProductsAdvanced({
+            search: req.query.search as string,           // ?search=Gaming
+            category: req.query.category as string,       // ?category=Electronics
+            sortBy: (req.query.sort as string) === 'desc' ? 'desc' : 'asc',  // ?sort=desc
+            page: parseInt(req.query.page as string) || 1,   // ?page=2
+            limit: parseInt(req.query.limit as string) || 10  // ?limit=5
+        });
+        
+        res.status(200).json(result);
+    } catch (error: any) {
+        res.status(400).json({ error: error.message || 'Advanced search failed' });
     }
 });

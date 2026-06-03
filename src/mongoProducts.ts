@@ -359,3 +359,69 @@ export async function getPaginatedProducts(
 
     
 }
+// advanced search
+// User wants:
+// "Show me cheap Gaming products in Electronics category, page 2"
+
+// This needs:
+// ├─ Search: "Gaming" in name
+// ├─ Filter: "Electronics" category  
+// ├─ Sort: Ascending (cheap to expensive)
+// └─ Pagination: Page 2
+
+// We need ONE function that does all of this!
+
+export async function searchProductsAdvanced(
+    query:{
+        search?: string;           // Optional
+        category?: string;         // Optional
+        sortBy?: 'asc' | 'desc';  // Optional
+        page?: number;             // Optional
+        limit?: number; 
+    } 
+    ): Promise<{
+        products: IProduct[];
+        currentPage: number;
+        totalPages: number;
+        totalProducts: number;
+        query: any; // Echo back the query for debugging
+    }> {
+    try {
+        const filter: any = {};
+        if (query.search && query.search.trim() !== '') {
+            filter.name = { $regex: query.search, $options: 'i' };
+        }
+        if (query.category && query.category.trim() !== '') {
+            filter.category = query.category;
+        }
+        const page  = query.page && query.page > 0 ? query.page : 1;
+        const limit = query.limit && query.limit > 0 ? query.limit : 10;
+        const sortOrder = query.sortBy === 'desc' ? -1 : 1;
+        
+        const skip = (page - 1) * limit;
+        const totalProducts = await Product.countDocuments(filter);
+        const totalPages = Math.ceil(totalProducts / limit);
+        const products = await Product.find(filter)
+            .sort({ price: sortOrder })
+            .skip(skip)
+            .limit(limit)
+            .exec();
+        
+        return {
+            products,
+            currentPage: page,
+            totalPages,
+            totalProducts,
+            query :{
+                search: query.search || 'none',
+                category: query.category || 'all',
+                sortOrder: query.sortBy || 'asc',
+                page,
+                limit
+            }
+        };
+    } catch (error) {
+        console.error('❌ Error in advanced search:', error);
+        throw error;
+    }
+}
