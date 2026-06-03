@@ -9,7 +9,8 @@ import {
     seedInitialData,
     searchProductsByName,
     filterProductsByCategory,
-    sortProductsByPrice
+    sortProductsByPrice,
+    getPaginatedProducts
 } from './mongoProducts';
 
 const app = express();
@@ -201,5 +202,25 @@ app.get('/products/sorted/:order', async (req: Request, res: Response) => {
         });
     }catch (error) {
         res.status(500).json({ error: 'Failed to sort products by price' });
+    }
+});
+
+// PAGINATION - Get products page by page
+app.get('/products/page/:page', async (req: Request, res: Response) => {
+    try {
+        // Get page from URL (e.g., /products/page/2)
+        const page = parseInt(String(req.params.page), 10) || 1;
+        
+        // Get limit from query string (e.g., ?limit=5)
+        // If not provided, default is 10
+        const limit = parseInt(String(req.query.limit), 10) || 10;
+        
+        // Call our pagination function
+        const result = await getPaginatedProducts(page, limit);
+        
+        // Send back the result
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to paginate products' });
     }
 });

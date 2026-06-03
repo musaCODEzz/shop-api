@@ -326,3 +326,36 @@ export async function sortProductsByPrice(
         throw error;
     }
 }
+export async function getPaginatedProducts(
+    page: number = 1,
+    limit: number = 10
+): Promise<{
+    products: IProduct[];
+    currentPage: number;
+    totalPages: number;
+    totalProducts: number;
+}> {
+    try {
+        if(page < 1) page = 1;
+        if(limit < 1) limit = 10;
+        const skip = (page - 1) * limit;
+        const totalProducts = await Product.countDocuments();
+        const totalPages = Math.ceil(totalProducts / limit);
+        const products = await Product.find({})
+            .skip(skip)
+            .limit(limit)
+            .sort({ id: 1 }) // Optional: sort by ID ascending for consistent pagination
+            .exec();
+        return {
+            products,
+            currentPage: page,
+            totalPages,
+            totalProducts
+        };
+    }catch (error) {
+        console.error('❌ Error fetching paginated products:', error);
+        throw error;
+    }
+
+    
+}
