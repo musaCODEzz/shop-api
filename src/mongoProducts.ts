@@ -310,3 +310,19 @@ export async function filterProductsByCategory(category: string): Promise<IProdu
         throw error;
     }
 }
+
+export async function sortProductsByPrice(
+    sortOrder: 'asc' | 'desc' = 'asc'
+): Promise<IProduct[]> {
+    try {
+        // Mongoose natively understands 'asc' and 'desc', so we just pass it straight in!
+        const products = await Product.find({})
+            .sort({ price: sortOrder })
+            .exec();
+            
+        return products;
+    } catch (error) {
+        console.error('❌ Error sorting products:', error);
+        throw error;
+    }
+}

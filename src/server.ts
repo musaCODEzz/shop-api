@@ -8,7 +8,8 @@ import {
     deleteProduct,
     seedInitialData,
     searchProductsByName,
-    filterProductsByCategory
+    filterProductsByCategory,
+    sortProductsByPrice
 } from './mongoProducts';
 
 const app = express();
@@ -185,5 +186,20 @@ app.get('/products/category/:category', async (req: Request, res: Response) => {
         });
     } catch (error) {
         res.status(500).json({ error: 'Failed to filter products by category' });
+    }
+});
+
+app.get('/products/sorted/:order', async (req: Request, res: Response) => {
+    try {
+        const order = req.params.order === 'desc' ? 'desc' : 'asc';  // Validate sort order
+        const products = await sortProductsByPrice(order);
+        
+        res.status(200).json({
+            count: products.length,
+            sortedBy: `price ${order === 'asc' ? 'low to high' : 'high to low'}`,
+            results: products
+        });
+    }catch (error) {
+        res.status(500).json({ error: 'Failed to sort products by price' });
     }
 });
